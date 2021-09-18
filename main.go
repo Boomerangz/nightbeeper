@@ -76,7 +76,7 @@ func playSugar() {
 }
 
 func main() {
-	fmt.Println("asdasd")
+	fmt.Println("start buffering")
 	f, err := f.Open("assets/ring.mp3")
 	if err != nil {
 		log.Fatal(err)
@@ -88,6 +88,7 @@ func main() {
 	}
 	defer streamer.Close()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
 	buffer := beep.NewBuffer(format)
 	buffer.Append(streamer)
 	streamer.Close()
@@ -95,7 +96,7 @@ func main() {
 	bufferStreamer := buffer.Streamer(0, buffer.Len())
 	ctrl = beep.Ctrl{Streamer: beep.Loop(-1, bufferStreamer), Paused: true}
 	speaker.Play(&ctrl)
-
+	fmt.Println("finished buffering")
 	//go runTelegramBot()
 	go refreshSugarLevel()
 
@@ -184,6 +185,7 @@ func getMinMax() (float64, float64) {
 			fmt.Print(err)
 			return 5, 9
 		}
+		ioutil.WriteFile("config.txt", b, 0644) // just pass the file name
 	}
 
 	min = 100
