@@ -2,3 +2,5 @@ nighbeeper
 run.sh
 .idea/
 nightbeeper
+assets/generator*
+assets/*.ogg

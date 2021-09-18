@@ -47,17 +47,7 @@ var configFS embed.FS
 
 func playSugar() {
 
-	strs := strings.Split(strconv.FormatFloat(sugarLevel, 'f', 1, 64), ".")
-	f1, err := f.Open("assets/" + strs[0] + ".mp3")
-	if err != nil {
-		log.Fatal(err)
-	}
-	f2, err := f.Open("assets/dot.mp3")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	f3, err := f.Open("assets/" + strs[1] + ".mp3")
+	f1, err := f.Open("assets/" + strconv.FormatFloat(sugarLevel, 'f', 1, 64) + ".mp3")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,18 +58,6 @@ func playSugar() {
 	}
 	defer streamer1.Close()
 
-	streamer2, _, err := mp3.Decode(f2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer streamer2.Close()
-
-	streamer3, _, err := mp3.Decode(f3)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer streamer3.Close()
-
 	done := make(chan bool)
 
 	speaker.Lock()
@@ -87,7 +65,7 @@ func playSugar() {
 	ctrl.Paused = true
 	speaker.Unlock()
 
-	speaker.Play(beep.Seq(streamer1, streamer2, streamer3, beep.Callback(func() {
+	speaker.Play(beep.Seq(streamer1, beep.Callback(func() {
 		done <- true
 	})))
 
@@ -136,9 +114,9 @@ func main() {
 		switch r {
 		case '1':
 			{
-				delta := time.Second * 5
+				delta := time.Minute * 5
 				snoozedTill = time.Now().Add(delta)
-				fmt.Println("snoozed for 5 seconds")
+				fmt.Println("snoozed for 5 minutes")
 				startSpeakerIfNeeded()
 				go func() {
 					time.Sleep(delta)
@@ -148,9 +126,9 @@ func main() {
 			}
 		case '2':
 			{
-				delta := time.Second * 15
+				delta := time.Minute * 30
 				snoozedTill = time.Now().Add(delta)
-				fmt.Println("snoozed for 15 seconds")
+				fmt.Println("snoozed for 15 minutes")
 				startSpeakerIfNeeded()
 				go func() {
 					time.Sleep(delta)
@@ -190,7 +168,8 @@ func refreshSugarLevel() {
 		sugarLevel = float64(level.SugarLevel) * 0.0555
 		measureTime, _ = time.Parse("2006-01-02T15:04:05-0700", level.DateString)
 		delta := level.Delta * 0.0555
-		fmt.Println(math.Round(sugarLevel*10)/10, math.Round(delta*10)/10, measureTime, snoozedTill, sugarDangerous)
+		min, max := getMinMax()
+		fmt.Println(math.Round(sugarLevel*10)/10, math.Round(delta*10)/10, measureTime, snoozedTill, min, max, sugarDangerous)
 		startSpeakerIfNeeded()
 	}
 }
@@ -206,6 +185,8 @@ func getMinMax() (float64, float64) {
 			return 5, 9
 		}
 	}
+
+	min = 100
 
 	for _, s := range strings.Split(string(b), "\n") {
 		i, err := strconv.ParseFloat(s, 64)
